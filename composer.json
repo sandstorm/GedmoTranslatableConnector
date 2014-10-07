@@ -1,0 +1,14 @@
+{
+    "name": "sandstorm/gedmotranslatableconnector",
+    "type": "typo3-flow-package",
+    "description": "Connector to make Gedmo Translatable work with TYPO3 Flow",
+    "require": {
+        "typo3/flow": "*",
+        "gedmo/doctrine-extensions": "2.3.*"
+    },
+    "autoload": {
+        "psr-0": {
+            "Sandstorm\\GedmoTranslatableConnector": "Classes"
+        }
+    }
+}

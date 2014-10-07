@@ -1,0 +1,4 @@
+# by marking this class as singleton, we make sure you can inject the same instance to your own class as which is used
+# inside the framework. This allows you to reconfigure Translatable on-the-go.
+Gedmo\Translatable\TranslatableListener:
+  scope: singleton
