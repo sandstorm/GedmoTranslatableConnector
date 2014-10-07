@@ -7,6 +7,7 @@ a small package which wraps up the necessary steps.
 
 Has been tested on recent TYPO3 Flow master; should also work on Flow 2.2.
 
+
 ## Usage
 
 Just include this package, and then use Gedmo Translatable as explained in their documentation (e.g. using
@@ -14,6 +15,9 @@ the @Gedmo\Translatable annotation): https://github.com/Atlantic18/DoctrineExten
 
 Make sure to clear the code cache completely in Data/Temporary after installing this package!
 
+Furthermore, make sure to create a *doctrine migration* which creates the ext_translations SQL table; e.g. run `./flow doctrine:migrationgenerate`
+
+**Check out the example package at https://github.com/sandstorm/GedmoTest**.
 
 ### Model Annotations
 
@@ -42,6 +46,33 @@ Just annotate your model properties which shall be localized with `Gedmo\Mapping
 In order to set the current language for *viewing*, inject the `Gedmo\Translatable\TranslatableListener` class and set
 the current language on it: `$translatableListener->setTranslatableLocale('de');`.
 
+### Editing multiple languages at the same time
+
+* Mix-in the Trait `Sandstorm\GedmoTranslatableConnector\TranslatableTrait` into your model, e.g. by doing:
+
+```
+/**
+ * @Flow\Entity
+ */
+class MyModel {
+  use \Sandstorm\GedmoTranslatableConnector\TranslatableTrait;
+  
+  // make sure some properties have Gedmo\Translatable annotations
+}
+```
+
+* This trait adds a `getTranslations()` and `setTranslations()` method, allowing to get and set other translations of
+  a model.
+  
+* Now, you can easily edit multiple languages by binding the form element to `translations.[language].[fieldname]`, e.g.
+  this works like the following:
+
+```
+Name (default): <f:form.textfield property="name" /><br />
+Name (de): <f:form.textfield property="translations.de.name" /><br />
+Name (en): <f:form.textfield property="translations.en.name" /><br />
+```
+
 
 ## Inner Workings
 
@@ -59,5 +90,4 @@ the current language on it: `$translatableListener->setTranslatableLocale('de');
 
 ## TODO list
 
-* make editing work more nicely (connect it nicely to Fluid)
 * check TYPO3 Flow 2.2

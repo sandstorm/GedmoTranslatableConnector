@@ -14,16 +14,24 @@ namespace Sandstorm\GedmoTranslatableConnector;
 /**
  * This trait can be mixed into Models which have some properties being marked as Gedmo\Translatable.
  *
- * It adds a magic property `translations` which is an array of the following form:
+ * It adds a magic property `translations` which is an array of the following form (provided that 'name' and 'abstract'
+ * are marked as translatable; and are translated in german and english):
  *
- * <language>: {
- *   property1: value1
- * }
+ * 'de' => [
+ *   'name' => 'Name auf Deutsch',
+ *   'abstract' => 'Der Abstract,
+ * ],
+ * 'en' => [
+ *   'name' => 'Name in english',
+ *   'abstract' => 'The abstract'
+ * ]
+ *
  *
  * This property can be read from and written to; so it can be used inside e.g. a Fluid form for the following:
+ *
  * <f:form.textfield property="name" id="name" />
  * <f:form.textfield property="translations.de.name" id="name" />
- * <f:form.textfield property="translations.en_US.name" id="name" />
+ * <f:form.textfield property="translations.en.name" id="name" />
  *
  *
  * DEVELOPMENT HINT: In this trait, make sure that *ALL ANNOTATIONS* are FULLY-QUALIFIED, as Use-Statements are not properly
