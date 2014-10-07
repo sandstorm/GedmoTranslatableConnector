@@ -1,3 +1,8 @@
+Sandstorm:
+  GedmoTranslatableConnector:
+    locale: mul_ZZ
+    defaultLocale: mul_ZZ
+
 TYPO3:
   Flow:
     # disable reflection for non psr-0 compliant 3rd party packages

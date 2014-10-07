@@ -2,3 +2,4 @@
 # inside the framework. This allows you to reconfigure Translatable on-the-go.
 Gedmo\Translatable\TranslatableListener:
   scope: singleton
+  factoryObjectName: Sandstorm\GedmoTranslatableConnector\TranslatableListenerFactory
