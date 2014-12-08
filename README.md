@@ -73,6 +73,21 @@ Name (de): <f:form.textfield property="translations.de.name" /><br />
 Name (en): <f:form.textfield property="translations.en.name" /><br />
 ```
 
+### Fetching an object in another locale
+
+If you have loaded an object in a specific locale, but lateron need to change the object to be in another locale,
+the method `reloadInLocale($locale)` (which is defined inside the trait `Sandstorm\GedmoTranslatableConnector\TranslatableTrait`)
+can be called:
+
+```
+$myModel->getName(); // will return the language which was set at the time where $myModel was fetched
+
+$myModel->reloadInLocale('de');
+$myModel->getName(); // will return *german*
+```
+
+**NOTE**: This has only been tested as long as these objects are not updated.
+
 
 ## Inner Workings
 

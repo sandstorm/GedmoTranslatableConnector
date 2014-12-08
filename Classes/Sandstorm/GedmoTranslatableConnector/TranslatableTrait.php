@@ -33,6 +33,7 @@ namespace Sandstorm\GedmoTranslatableConnector;
  * <f:form.textfield property="translations.de.name" id="name" />
  * <f:form.textfield property="translations.en.name" id="name" />
  *
+ * Furthermore, it adds a method "reloadInLocale" which can be used to reload this object in a specific language.
  *
  * DEVELOPMENT HINT: In this trait, make sure that *ALL ANNOTATIONS* are FULLY-QUALIFIED, as Use-Statements are not properly
  *                   resolved when being in traits as far as I see
@@ -48,12 +49,29 @@ trait TranslatableTrait {
 	protected $entityManager;
 
 	/**
+	 * @TYPO3\Flow\Annotations\Transient
+	 * @\Gedmo\Mapping\Annotation\Locale
+	 * @var string
+	 */
+	protected $locale;
+
+	/**
 	 * @return array
 	 */
 	public function getTranslations() {
 		/* @var $repository \Gedmo\Translatable\Entity\Repository\TranslationRepository */
 		$repository = $this->entityManager->getRepository('Gedmo\\Translatable\\Entity\\Translation');
 		return $repository->findTranslations($this);
+	}
+
+	/**
+	 * Reload this object in $locale
+	 *
+	 * @param string $locale
+	 */
+	public function reloadInLocale($locale) {
+		$this->locale = $locale;
+		$this->entityManager->refresh($this);
 	}
 
 	/**
