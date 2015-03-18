@@ -14,6 +14,6 @@ TYPO3:
     persistence:
       doctrine:
         eventListeners:
-          -
+          'Gedmo\Translatable\TranslatableListener':
             events: ['postLoad', 'postPersist', 'preFlush', 'onFlush', 'loadClassMetadata']
             listener: 'Gedmo\Translatable\TranslatableListener'
