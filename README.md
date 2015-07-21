@@ -1,11 +1,11 @@
-# TYPO3 Flow Connector to Gedmo Translatable
+# Flow Framework Connector to Gedmo Translatable
 
 by Sebastian Kurfürst, sandstorm|media. Thanks to WebEssentials for sponsoring this work.
 
-Using Gedmo.Translatable in TYPO3 Flow proved a little harder than originally anticipated -- that's why I created
+Using Gedmo.Translatable in Flow Framework proved a little harder than originally anticipated -- that's why I created
 a small package which wraps up the necessary steps.
 
-Has been tested on recent TYPO3 Flow master; should also work on Flow 2.2.
+Has been tested on recent Flow Framework master; should also work on Flow 2.2 and Flow 3.0
 
 
 ## Usage
@@ -89,9 +89,123 @@ $myModel->getName(); // will return *german*
 **NOTE**: This has only been tested as long as these objects are not updated.
 
 
+## Translating Associations
+
+**Warning: this feature is not yet 100% stable; please test it and give feedback!**
+
+Normally, associations towards other domain models such as images or assets are not translation-aware; but Translatable
+only works for simple properties.
+
+The TranslatableConnector however contains some functionality to make translation of associations work; by using a
+little workaround: **We store the identifier of the target object in the domain model, and manually load/store from this
+identifier**.
+
+This works as follows:
+
+1. Makes sure you have the `TranslatableTrait` added to your domain class
+
+2. e.g. to make an `Asset` reference translatable, create a new property `assetIdentifer` which is a string and will
+   contain the asset identifier. This property should be marked as `Gedmo\Translatable`.
+
+3. Then, you need to configure the `translationAssociationMapping`, which tells the system that the (virtual) property
+   should `asset` should internally be stored as `assetIdentifier`.
+
+4. Furthermore, create `assetOnSave` and `assetOnLoad` methods as outlined below, which convert the different representations
+
+See the full example below:
+
+```
+class Event {
+	use TranslatableTrait;
+	
+	/**
+	 * @var array
+	 * @Flow\Transient
+	 */
+	protected $translationAssociationMapping = array(
+		'assetIdentifier' => 'asset'
+	);
+	
+	/**
+	 * @Gedmo\Translatable
+	 * @var string
+	 */
+	protected $assetIdentifier;
+
+	/**
+	 * @Flow\Inject
+	 * @var AssetRepository
+	 */
+	protected $assetRepository;
+
+	/**
+	 * @Flow\Inject
+	 * @var PersistenceManagerInterface
+	 */
+	protected $persistenceManager;
+
+	/**
+	 * @Flow\Inject
+	 * @var PropertyMapper
+	 */
+	protected $propertyMapper;
+
+
+	/**
+	 * @return \TYPO3\Media\Domain\Model\Asset
+	 */
+	public function getAsset() {
+		return $this->assetOnLoad($this->assetIdentifier);
+	}
+
+	/**
+	 * !!! This accepts the raw array as the user uploaded it; as we need to trigger the property mapper inside
+	 *     assetOnSave manually.
+	 *
+	 * @param array $asset
+	 */
+	public function setAsset($asset) {
+		$this->assetIdentifier = $this->assetOnSave($asset);
+	}
+
+	/**
+	 * This method is called in two places:
+	 * - inside setAsset()
+	 * - automatically by the TranslatableTrait
+	 * 
+	 * @param array $asset
+	 */
+	public function assetOnSave($asset) {
+		$asset = $this->propertyMapper->convert($asset, 'TYPO3\Media\Domain\Model\AssetInterface');
+		if ($asset === NULL) {
+			$this->assetRepository->remove($asset);
+			return NULL;
+		} elseif ($this->persistenceManager->isNewObject($asset)) {
+			$this->assetRepository->add($asset);
+			return $this->persistenceManager->getIdentifierByObject($asset);
+		} else {
+			$this->assetRepository->update($asset);
+			return $this->persistenceManager->getIdentifierByObject($asset);
+		}
+	}
+
+	/**
+	 * This method is called in two places:
+	 * - inside getAsset()
+	 * - automatically by the TranslatableTrait
+	 * 
+	 * @param array $asset
+	 */
+	public function assetOnLoad($assetIdentifier) {
+		return $this->assetRepository->findByIdentifier($assetIdentifier);
+	}
+}
+```   
+
+
 ## Inner Workings
 
-(as a further reference -- could also be reduced if we change TYPO3 Flow a little on the relevant parts)
+(as a further reference -- could also be reduced if we change Flow Framework a little on the relevant parts)
 
 * Settings.yaml: Ignore Gedmo namespace from Reflection, adds the Translatable Listener as Doctrine Event listener.
   This part is pretty standard for using other Gedmo Doctrine extensions as well.
@@ -105,4 +219,4 @@ $myModel->getName(); // will return *german*
 
 ## TODO list
 
-* check TYPO3 Flow 2.2
+* check Flow Framework 2.2

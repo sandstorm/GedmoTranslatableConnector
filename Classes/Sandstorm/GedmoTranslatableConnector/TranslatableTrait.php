@@ -61,12 +61,28 @@ trait TranslatableTrait {
 	public function getTranslations() {
 		/* @var $repository \Gedmo\Translatable\Entity\Repository\TranslationRepository */
 		$repository = $this->entityManager->getRepository('Gedmo\\Translatable\\Entity\\Translation');
-		return $repository->findTranslations($this);
+		$translations = $repository->findTranslations($this);
+
+		if (property_exists($this, 'translationAssociationMapping')) {
+			foreach ($translations as $language => $tmp) {
+				foreach ($this->translationAssociationMapping as $internalKey => $key) {
+					$possibleMethodName = ucfirst($key) . 'onLoad';
+					if (method_exists($this, $possibleMethodName)) {
+						if (isset($translations[$language][$internalKey])) {
+							$translations[$language][$key] = $this->$possibleMethodName($translations[$language][$internalKey]);
+						}
+						unset($translations[$language][$internalKey]);
+					}
+				}
+			}
+		}
+
+		return $translations;
 	}
 
 	/**
 	 * Reload this object in $locale
-	 *
+	 *ja
 	 * @param string $locale
 	 */
 	public function reloadInLocale($locale) {
@@ -78,6 +94,20 @@ trait TranslatableTrait {
 	 * @param array $translations
 	 */
 	public function setTranslations(array $translations) {
+		if (property_exists($this, 'translationAssociationMapping')) {
+			foreach ($translations as $language => $tmp) {
+				foreach ($this->translationAssociationMapping as $internalKey => $key) {
+					$possibleMethodName = ucfirst($key) . 'onSave';
+					if (method_exists($this, $possibleMethodName)) {
+						if (isset($translations[$language][$key])) {
+							$translations[$language][$internalKey] = $this->$possibleMethodName($translations[$language][$key]);
+						}
+						unset($translations[$language][$key]);
+					}
+				}
+			}
+		}
+
 		/* @var $repository \Gedmo\Translatable\Entity\Repository\TranslationRepository */
 		$repository = $this->entityManager->getRepository('Gedmo\\Translatable\\Entity\\Translation');
 
