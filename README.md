@@ -5,7 +5,7 @@ by Sebastian Kurfürst, sandstorm|media. Thanks to WebEssentials for sponsoring 
 Using Gedmo.Translatable in Flow Framework proved a little harder than originally anticipated -- that's why I created
 a small package which wraps up the necessary steps.
 
-Has been tested on recent Flow Framework master; should also work on Flow 2.2 and Flow 3.0
+Has been tested on recent Flow Framework master; should also work on Flow 2.2, Flow 3.0 and Flow 3.1.
 
 
 ## Usage

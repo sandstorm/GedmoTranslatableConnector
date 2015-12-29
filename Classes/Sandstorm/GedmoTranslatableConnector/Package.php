@@ -31,7 +31,7 @@ class Package extends \TYPO3\Flow\Package\Package {
 		// Note: We replace FlowAnnotationDriver *on a very low level* with the *MappingDriverChain* object; because this class
 		// is only used inside EntityManagerFactory -- so we know quite exactly what methods are called on that object.
 		$bootstrap->getSignalSlotDispatcher()->connect('TYPO3\Flow\Core\Booting\Sequence', 'beforeInvokeStep', function($step) use($bootstrap) {
-			if ($step->getIdentifier() === 'typo3.flow:persistence') {
+			if ($step->getIdentifier() === 'typo3.flow:resources') {
 				$flowAnnotationDriver = $bootstrap->getObjectManager()->get('TYPO3\Flow\Persistence\Doctrine\Mapping\Driver\FlowAnnotationDriver');
 
 				$driverChain = new MappingDriverChainWithFlowAnnotationDriverAsDefault($flowAnnotationDriver);
