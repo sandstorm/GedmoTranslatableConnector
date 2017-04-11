@@ -12,7 +12,7 @@ namespace Sandstorm\GedmoTranslatableConnector;
  *                                                                            */
 
 use Doctrine\Common\Persistence\Mapping\Driver\MappingDriverChain;
-use TYPO3\Flow\Persistence\Doctrine\Mapping\Driver\FlowAnnotationDriver;
+use Neos\Flow\Persistence\Doctrine\Mapping\Driver\FlowAnnotationDriver;
 
 /**
  * Helper class which just delegates the "setEntityManager()" method to the Flow Annotation Driver passed in the constructor.

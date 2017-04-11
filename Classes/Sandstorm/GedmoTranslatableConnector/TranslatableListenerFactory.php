@@ -12,7 +12,7 @@ namespace Sandstorm\GedmoTranslatableConnector;
  *                                                                            */
 
 
-use TYPO3\Flow\Annotations as Flow;
+use Neos\Flow\Annotations as Flow;
 use Gedmo\Translatable\TranslatableListener;
 
 /**
@@ -23,13 +23,13 @@ use Gedmo\Translatable\TranslatableListener;
 class TranslatableListenerFactory {
 
 	/**
-	 * @Flow\Inject(setting="defaultLocale")
+	 * @Flow\InjectConfiguration("defaultLocale")
 	 * @var string
 	 */
 	protected $defaultLocale;
 
 	/**
-	 * @Flow\Inject(setting="locale")
+	 * @Flow\InjectConfiguration("locale")
 	 * @var string
 	 */
 	protected $locale;
@@ -41,4 +41,4 @@ class TranslatableListenerFactory {
 		return $listener;
 	}
 
-} 
+}

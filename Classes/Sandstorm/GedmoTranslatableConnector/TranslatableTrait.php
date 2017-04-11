@@ -43,13 +43,13 @@ trait TranslatableTrait {
 	/**
 	 * Doctrine's Entity Manager. Note that "ObjectManager" is the name of the related interface.
 	 *
-	 * @TYPO3\Flow\Annotations\Inject
+	 * @Neos\Flow\Annotations\Inject
 	 * @var \Doctrine\Common\Persistence\ObjectManager
 	 */
 	protected $entityManager;
 
 	/**
-	 * @TYPO3\Flow\Annotations\Transient
+	 * @Neos\Flow\Annotations\Transient
 	 * @\Gedmo\Mapping\Annotation\Locale
 	 * @var string
 	 */
