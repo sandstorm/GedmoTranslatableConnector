@@ -7,8 +7,6 @@ namespace Sandstorm\GedmoTranslatableConnector;
  * It is free software; you can redistribute it and/or modify it under        *
  * the terms of the GNU Lesser General Public License, either version 3       *
  * of the License, or (at your option) any later version.                     *
- *                                                                            *
- * The TYPO3 project - inspiring people to share!                             *
  *                                                                            */
 
 use Doctrine\ORM\Mapping\Driver\AnnotationDriver;
@@ -16,7 +14,7 @@ use Neos\Flow\Reflection\ClassSchema;
 use Neos\Utility\ObjectAccess;
 
 /**
- * Class Package; reconfiguring TYPO3 Flow for use with Gedmo Translatable
+ * Class Package; reconfiguring Neos Flow for use with Gedmo Translatable
  *
  * @package Sandstorm\GedmoTranslatableConnector
  */

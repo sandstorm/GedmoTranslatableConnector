@@ -152,7 +152,7 @@ class Event {
 
 
 	/**
-	 * @return \TYPO3\Media\Domain\Model\Asset
+	 * @return \Neos\Media\Domain\Model\Asset
 	 */
 	public function getAsset() {
 		return $this->assetOnLoad($this->assetIdentifier);
@@ -176,7 +176,7 @@ class Event {
 	 * @param array $asset
 	 */
 	public function assetOnSave($asset) {
-		$asset = $this->propertyMapper->convert($asset, 'TYPO3\Media\Domain\Model\AssetInterface');
+		$asset = $this->propertyMapper->convert($asset, 'Neos\Media\Domain\Model\AssetInterface');
 		if ($asset === NULL) {
 			$this->assetRepository->remove($asset);
 			return NULL;

@@ -7,8 +7,6 @@ namespace Sandstorm\GedmoTranslatableConnector;
  * It is free software; you can redistribute it and/or modify it under        *
  * the terms of the GNU Lesser General Public License, either version 3       *
  * of the License, or (at your option) any later version.                     *
- *                                                                            *
- * The TYPO3 project - inspiring people to share!                             *
  *                                                                            */
 
 /**
@@ -44,7 +42,7 @@ trait TranslatableTrait {
 	 * Doctrine's Entity Manager. Note that "ObjectManager" is the name of the related interface.
 	 *
 	 * @Neos\Flow\Annotations\Inject
-	 * @var \Doctrine\Common\Persistence\ObjectManager
+	 * @var \Doctrine\ORM\EntityManagerInterface
 	 */
 	protected $entityManager;
 
