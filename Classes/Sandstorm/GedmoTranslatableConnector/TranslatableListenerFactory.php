@@ -32,10 +32,20 @@ class TranslatableListenerFactory {
 	 */
 	protected $locale;
 
+	/**
+	 * @Flow\InjectConfiguration(path="translationFallback")
+	 * @var boolean
+	 */
+	protected $translationFallback;
+
+	/**
+	 * @return TranslatableListener
+	 */
 	public function create() {
 		$listener = new TranslatableListener();
 		$listener->setDefaultLocale($this->defaultLocale);
 		$listener->setTranslatableLocale($this->locale);
+		$listener->setTranslationFallback($this->translationFallback);
 		return $listener;
 	}
 
