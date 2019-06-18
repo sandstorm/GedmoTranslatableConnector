@@ -111,8 +111,34 @@ trait TranslatableTrait {
 
 		foreach ($translations as $language => $properties) {
 			foreach ($properties as $propertyName => $translatedValue) {
-				$repository->translate($this, $propertyName, $language, $translatedValue);
+			    /* Do not store empty translations since gedmo extension's behaviour has changed in
+                https://github.com/Atlantic18/DoctrineExtensions/commit/6cc9fb3864a2562806d8a66276196825e3181c49 */
+			    if ($translatedValue) {
+                    $repository->translate($this, $propertyName, $language, $translatedValue);
+                } else {
+                    $this->removeTranslation($repository, $language, $propertyName);
+                }
 			}
 		}
 	}
+
+    /**
+     * @param $repository
+     * @param $language
+     * @param $propertyName
+     */
+    private function removeTranslation($repository, $language, $propertyName)
+    {
+        $meta = $this->entityManager->getClassMetadata(get_class($this));
+        $foreignKey = $meta->getReflectionProperty($meta->getSingleIdentifierFieldName())->getValue($this);
+        $trans = $repository->findOneBy([
+            'locale' => $language,
+            'objectClass' => get_class($this),
+            'field' => $propertyName,
+            'foreignKey' => $foreignKey
+        ]);
+        if ($trans) {
+            $this->entityManager->remove($trans);
+        }
+    }
 }
