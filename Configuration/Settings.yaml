@@ -3,6 +3,7 @@ Sandstorm:
   GedmoTranslatableConnector:
     locale: mul_ZZ
     defaultLocale: mul_ZZ
+    translationFallback: false
 Neos:
   Flow:
     object:
