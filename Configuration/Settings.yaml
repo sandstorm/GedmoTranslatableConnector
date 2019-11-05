@@ -4,6 +4,7 @@ Sandstorm:
     locale: mul_ZZ
     defaultLocale: mul_ZZ
     translationFallback: false
+    persistDefaultLocaleTranslation: false
 Neos:
   Flow:
     object:
