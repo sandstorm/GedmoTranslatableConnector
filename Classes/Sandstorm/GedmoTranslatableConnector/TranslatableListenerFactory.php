@@ -39,6 +39,12 @@ class TranslatableListenerFactory {
 	protected $translationFallback;
 
 	/**
+	 * @Flow\InjectConfiguration(path="persistDefaultLocaleTranslation")
+	 * @var boolean
+	 */
+	protected $persistDefaultLocaleTranslation;
+
+	/**
 	 * @return TranslatableListener
 	 */
 	public function create() {
@@ -46,6 +52,7 @@ class TranslatableListenerFactory {
 		$listener->setDefaultLocale($this->defaultLocale);
 		$listener->setTranslatableLocale($this->locale);
 		$listener->setTranslationFallback($this->translationFallback);
+		$listener->setPersistDefaultLocaleTranslation($this->persistDefaultLocaleTranslation);
 		return $listener;
 	}
 
