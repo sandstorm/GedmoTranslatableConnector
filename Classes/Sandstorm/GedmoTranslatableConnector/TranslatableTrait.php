@@ -54,9 +54,25 @@ trait TranslatableTrait {
 	protected $locale;
 
 	/**
+	 * @Neos\Flow\Annotations\Transient
+	 * @var array
+	 */
+	protected $firstLevelTranslationsCache = [];
+
+	/**
+	 * @Neos\Flow\Annotations\Inject
+	 * @var \Gedmo\Translatable\TranslatableListener
+	 */
+	protected $translatableListener;
+
+	/**
 	 * @return array
 	 */
 	public function getTranslations() {
+		if (count($this->firstLevelTranslationsCache) > 0) {
+			return $this->firstLevelTranslationsCache;
+		}
+
 		/* @var $repository \Gedmo\Translatable\Entity\Repository\TranslationRepository */
 		$repository = $this->entityManager->getRepository('Gedmo\\Translatable\\Entity\\Translation');
 		$translations = $repository->findTranslations($this);
@@ -74,7 +90,48 @@ trait TranslatableTrait {
 				}
 			}
 		}
+		$this->firstLevelTranslationsCache = $translations;
 
+		return $this->firstLevelTranslationsCache;
+	}
+
+	/**
+	 * Return the translations in the format of
+	 * 'name' => [
+	 *   'de' => 'Name auf Deutsch',
+	 *   'en' => 'Name in english',
+	 * ],
+	 * 'abstract' => [
+	 *   'de' => 'Der Abstract,
+	 *   'en' => 'The abstract'
+	 * ]
+	 * @return array
+	 */
+	public function getTranslationsByProperties(): array
+	{
+		$translations = [];
+		foreach ($this->getTranslations() as $language => $values) {
+			foreach ($values as $propertyName => $value) {
+				$translations[$propertyName][$language] = $value;
+			}
+		}
+		return $translations;
+	}
+
+	/**
+	 * Return the translations of a property
+	 *
+	 * @param $propertyName
+	 * @return array
+	 */
+	public function getTranslationsOfProperty($propertyName): array
+	{
+		$translations = array();
+		foreach ($this->getTranslations() as $key => $values) {
+			if (array_key_exists($propertyName, $values)) {
+				$translations[$key] = $values[$propertyName];
+			}
+		}
 		return $translations;
 	}
 
