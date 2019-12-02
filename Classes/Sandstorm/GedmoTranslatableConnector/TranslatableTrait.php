@@ -9,6 +9,8 @@ namespace Sandstorm\GedmoTranslatableConnector;
  * of the License, or (at your option) any later version.                     *
  *                                                                            */
 
+use Neos\Utility\ObjectAccess;
+
 /**
  * This trait can be mixed into Models which have some properties being marked as Gedmo\Translatable.
  *
@@ -54,9 +56,25 @@ trait TranslatableTrait {
 	protected $locale;
 
 	/**
+	 * @Neos\Flow\Annotations\Transient
+	 * @var array
+	 */
+	protected $firstLevelTranslationsCache = [];
+
+	/**
+	 * @Neos\Flow\Annotations\Inject
+	 * @var \Gedmo\Translatable\TranslatableListener
+	 */
+	protected $translatableListener;
+
+	/**
 	 * @return array
 	 */
 	public function getTranslations() {
+		if (count($this->firstLevelTranslationsCache) > 0) {
+			return $this->firstLevelTranslationsCache;
+		}
+
 		/* @var $repository \Gedmo\Translatable\Entity\Repository\TranslationRepository */
 		$repository = $this->entityManager->getRepository('Gedmo\\Translatable\\Entity\\Translation');
 		$translations = $repository->findTranslations($this);
@@ -74,7 +92,48 @@ trait TranslatableTrait {
 				}
 			}
 		}
+		$this->firstLevelTranslationsCache = $translations;
 
+		return $this->firstLevelTranslationsCache;
+	}
+
+	/**
+	 * Return the translations in the format of
+	 * 'name' => [
+	 *   'de' => 'Name auf Deutsch',
+	 *   'en' => 'Name in english',
+	 * ],
+	 * 'abstract' => [
+	 *   'de' => 'Der Abstract,
+	 *   'en' => 'The abstract'
+	 * ]
+	 * @return array
+	 */
+	public function getTranslationsByProperties(): array
+	{
+		$translations = [];
+		foreach ($this->getTranslations() as $language => $values) {
+			foreach ($values as $propertyName => $value) {
+				$translations[$propertyName][$language] = $value;
+			}
+		}
+		return $translations;
+	}
+
+	/**
+	 * Return the translations of a property
+	 *
+	 * @param $propertyName
+	 * @return array
+	 */
+	public function getTranslationsOfProperty($propertyName): array
+	{
+		$translations = array();
+		foreach ($this->getTranslations() as $key => $values) {
+			if (array_key_exists($propertyName, $values)) {
+				$translations[$key] = $values[$propertyName];
+			}
+		}
 		return $translations;
 	}
 
@@ -87,6 +146,14 @@ trait TranslatableTrait {
 		$this->locale = $locale;
 		$this->entityManager->refresh($this);
 	}
+
+    /**
+     * @param string $locale
+     */
+    public function setLocale(string $locale)
+    {
+        $this->locale = $locale;
+    }
 
 	/**
 	 * @param array $translations
@@ -111,13 +178,22 @@ trait TranslatableTrait {
 
 		foreach ($translations as $language => $properties) {
 			foreach ($properties as $propertyName => $translatedValue) {
-			    /* Do not store empty translations since gedmo extension's behaviour has changed in
-                https://github.com/Atlantic18/DoctrineExtensions/commit/6cc9fb3864a2562806d8a66276196825e3181c49 */
-			    if ($translatedValue) {
-                    $repository->translate($this, $propertyName, $language, $translatedValue);
-                } else {
-                    $this->removeTranslation($repository, $language, $propertyName);
-                }
+				/* Do not store empty translations since gedmo extension's behaviour has changed in
+				https://github.com/Atlantic18/DoctrineExtensions/commit/6cc9fb3864a2562806d8a66276196825e3181c49 */
+				if ($translatedValue) {
+					$meta = $this->entityManager->getClassMetadata(get_class($this));
+					if ($language === $this->translatableListener->getTranslatableLocale($this, $meta, $this->entityManager)) {
+						/* Do not translate the default language by the repository. The repository->translate() does the
+						same, but also persists the object ($this). However, persisting the object should not be handled
+						withing this setter.
+						TODO: Rethink the concept of calling the translation repository in here. Move it to a doctrine persistence listener? */
+						ObjectAccess::setProperty($this, $propertyName, $translatedValue);
+					} else {
+						$repository->translate($this, $propertyName, $language, $translatedValue);
+					}
+				} else {
+					$this->removeTranslation($repository, $language, $propertyName);
+				}
 			}
 		}
 	}
