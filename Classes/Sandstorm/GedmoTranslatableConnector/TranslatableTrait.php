@@ -196,6 +196,9 @@ trait TranslatableTrait {
 				}
 			}
 		}
+
+		// Keep the cache up to date. This also supports getTranslations() calls without persisting the object.
+		$this->firstLevelTranslationsCache = $translations;
 	}
 
     /**
