@@ -190,12 +190,14 @@ trait TranslatableTrait {
 		$repository = $this->entityManager->getRepository('Gedmo\\Translatable\\Entity\\Translation');
 
 		foreach ($translations as $language => $properties) {
-			foreach ($properties as $propertyName => $translatedValue) {
+            $meta = $this->entityManager->getClassMetadata(get_class($this));
+            // $locale class property overwrites the translatable listener (for some reasons, this is not always the same)
+			$locale = $this->locale ?? $this->translatableListener->getTranslatableLocale($this, $meta, $this->entityManager);
+            foreach ($properties as $propertyName => $translatedValue) {
 				/* Do not store empty translations since gedmo extension's behaviour has changed in
 				https://github.com/Atlantic18/DoctrineExtensions/commit/6cc9fb3864a2562806d8a66276196825e3181c49 */
 				if ($translatedValue) {
-					$meta = $this->entityManager->getClassMetadata(get_class($this));
-					if ($language === $this->translatableListener->getTranslatableLocale($this, $meta, $this->entityManager)) {
+					if ($language === $locale) {
 						/* Do not translate the default language by the repository. The repository->translate() does the
 						same, but also persists the object ($this). However, persisting the object should not be handled
 						withing this setter.
