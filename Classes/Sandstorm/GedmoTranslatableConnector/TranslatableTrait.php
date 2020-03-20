@@ -138,6 +138,19 @@ trait TranslatableTrait {
 	}
 
 	/**
+	 * Return the property in a specific locale
+	 *
+	 * @param string $propertyName
+	 * @param string $locale
+	 * @return null|string
+	 */
+	public function getPropertyInLocale(string $propertyName, string $locale): ?string
+	{
+		$propertyTranslations = $this->getTranslationsOfProperty($propertyName);
+		return $propertyTranslations[$locale] ?? null;
+	}
+
+	/**
 	 * Reload this object in $locale
 	 *ja
 	 * @param string $locale
