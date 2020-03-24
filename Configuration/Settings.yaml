@@ -8,9 +8,9 @@ Sandstorm:
 Neos:
   Flow:
     object:
-      excludeClasses:
+      includeClasses:
         gedmo.doctrineextensions:
-          - 'Gedmo\\.*'
+          - 'Gedmo\\Translatable\\Entity'
     persistence:
       doctrine:
         eventListeners:
