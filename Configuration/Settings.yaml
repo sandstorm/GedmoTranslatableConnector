@@ -7,10 +7,6 @@ Sandstorm:
     persistDefaultLocaleTranslation: false
 Neos:
   Flow:
-    object:
-      includeClasses:
-        gedmo.doctrineextensions:
-          - 'Gedmo\\Translatable\\Entity'
     persistence:
       doctrine:
         eventListeners:
