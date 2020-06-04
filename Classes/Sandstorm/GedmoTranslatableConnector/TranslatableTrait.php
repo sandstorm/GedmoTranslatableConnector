@@ -213,7 +213,7 @@ trait TranslatableTrait {
 		}
 
 		// Keep the cache up to date. This also supports getTranslations() calls without persisting the object.
-        $this->firstLevelTranslationsCache = array_merge_recursive($this->firstLevelTranslationsCache, $translations);
+        $this->firstLevelTranslationsCache = array_replace_recursive($this->firstLevelTranslationsCache, $translations);
 	}
 
     /**
