@@ -194,16 +194,16 @@ trait TranslatableTrait {
             // $locale class property overwrites the translatable listener (for some reasons, this is not always the same)
 			$locale = $this->locale ?? $this->translatableListener->getTranslatableLocale($this, $meta, $this->entityManager);
             foreach ($properties as $propertyName => $translatedValue) {
+				if ($language === $locale) {
+					ObjectAccess::setProperty($this, $propertyName, $translatedValue);
+				}
 				/* Do not store empty translations since gedmo extension's behaviour has changed in
 				https://github.com/Atlantic18/DoctrineExtensions/commit/6cc9fb3864a2562806d8a66276196825e3181c49 */
 				if ($translatedValue) {
-					if ($language === $locale) {
+					if ($language !== $locale) {
 						/* Do not translate the default language by the repository. The repository->translate() does the
 						same, but also persists the object ($this). However, persisting the object should not be handled
-						withing this setter.
-						TODO: Rethink the concept of calling the translation repository in here. Move it to a doctrine persistence listener? */
-						ObjectAccess::setProperty($this, $propertyName, $translatedValue);
-					} else {
+						withing this setter. */
 						$repository->translate($this, $propertyName, $language, $translatedValue);
 					}
 				} else {
