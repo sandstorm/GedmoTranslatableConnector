@@ -9,7 +9,7 @@ namespace Sandstorm\GedmoTranslatableConnector;
  * of the License, or (at your option) any later version.                     *
  *                                                                            */
 
-use Doctrine\Common\Persistence\Mapping\Driver\MappingDriverChain;
+use Doctrine\Persistence\Mapping\Driver\MappingDriverChain;
 use Neos\Flow\Persistence\Doctrine\Mapping\Driver\FlowAnnotationDriver;
 
 /**
@@ -22,10 +22,10 @@ class MappingDriverChainWithFlowAnnotationDriverAsDefault extends MappingDriverC
 	}
 
 	/**
-	 * @param \Doctrine\Common\Persistence\ObjectManager $entityManager
+	 * @param \Doctrine\ORM\EntityManager $entityManager
 	 * @return void
 	 */
-	public function setEntityManager(\Doctrine\Common\Persistence\ObjectManager $entityManager) {
+	public function setEntityManager(\Doctrine\ORM\EntityManager $entityManager) {
 		$this->getDefaultDriver()->setEntityManager($entityManager);
 	}
-} 
+}

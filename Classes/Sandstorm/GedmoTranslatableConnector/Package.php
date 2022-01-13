@@ -33,7 +33,7 @@ class Package extends \Neos\Flow\Package\Package {
 				$flowAnnotationDriver = $bootstrap->getObjectManager()->get('Neos\Flow\Persistence\Doctrine\Mapping\Driver\FlowAnnotationDriver');
 
 				$driverChain = new MappingDriverChainWithFlowAnnotationDriverAsDefault($flowAnnotationDriver);
-				$driverChain->addDriver(new AnnotationDriver(ObjectAccess::getProperty($flowAnnotationDriver, 'reader', TRUE), FLOW_PATH_PACKAGES . 'Libraries/gedmo/doctrine-extensions/lib/Gedmo/Translatable/Entity'), 'Gedmo');
+				$driverChain->addDriver(new AnnotationDriver(ObjectAccess::getProperty($flowAnnotationDriver, 'reader', TRUE), FLOW_PATH_PACKAGES . 'Libraries/gedmo/doctrine-extensions/src/Translatable/Entity'), 'Gedmo');
 				$bootstrap->getObjectManager()->setInstance('Neos\Flow\Persistence\Doctrine\Mapping\Driver\FlowAnnotationDriver', $driverChain);
 			}
 		});
@@ -53,4 +53,4 @@ class Package extends \Neos\Flow\Package\Package {
 			}
 		});
 	}
-} 
+}
