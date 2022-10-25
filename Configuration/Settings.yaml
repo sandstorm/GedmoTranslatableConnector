@@ -5,6 +5,7 @@ Sandstorm:
     defaultLocale: mul_ZZ
     translationFallback: false
     persistDefaultLocaleTranslation: false
+    instantTranslation: true
 Neos:
   Flow:
     persistence:

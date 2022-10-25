@@ -10,5 +10,10 @@
         "psr-0": {
             "Sandstorm\\GedmoTranslatableConnector": "Classes"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Sandstorm\\GedmoTranslatableConnector\\Tests\\": "Tests"
+        }
     }
 }

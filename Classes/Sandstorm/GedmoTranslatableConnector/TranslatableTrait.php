@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Sandstorm\GedmoTranslatableConnector;
 
 /*                                                                            *
@@ -9,8 +12,6 @@ namespace Sandstorm\GedmoTranslatableConnector;
  * of the License, or (at your option) any later version.                     *
  *                                                                            */
 
-use Neos\Utility\ObjectAccess;
-
 /**
  * This trait can be mixed into Models which have some properties being marked as Gedmo\Translatable.
  *
@@ -19,11 +20,11 @@ use Neos\Utility\ObjectAccess;
  *
  * 'de' => [
  *   'name' => 'Name auf Deutsch',
- *   'abstract' => 'Der Abstract,
+ *   'abstract' => 'Der Abstract',
  * ],
  * 'en' => [
  *   'name' => 'Name in english',
- *   'abstract' => 'The abstract'
+ *   'abstract' => 'The abstract',
  * ]
  *
  *
@@ -35,204 +36,148 @@ use Neos\Utility\ObjectAccess;
  *
  * Furthermore, it adds a method "reloadInLocale" which can be used to reload this object in a specific language.
  *
- * DEVELOPMENT HINT: In this trait, make sure that *ALL ANNOTATIONS* are FULLY-QUALIFIED, as Use-Statements are not properly
- *                   resolved when being in traits as far as I see
+ * DEVELOPMENT HINT: In traits, make sure that *ALL ANNOTATIONS* are FULLY-QUALIFIED. Use-Statements are not properly
+ * resolved when being in traits.
  */
-trait TranslatableTrait {
-
-	/**
-	 * Doctrine's Entity Manager. Note that "ObjectManager" is the name of the related interface.
-	 *
-	 * @Neos\Flow\Annotations\Inject
-	 * @var \Doctrine\ORM\EntityManagerInterface
-	 */
-	protected $entityManager;
-
-	/**
-	 * @Neos\Flow\Annotations\Transient
-	 * @\Gedmo\Mapping\Annotation\Locale
-	 * @var string
-	 */
-	protected $locale;
-
-	/**
-	 * @Neos\Flow\Annotations\Transient
-	 * @var array
-	 */
-	protected $firstLevelTranslationsCache = [];
-
-	/**
-	 * @Neos\Flow\Annotations\Inject
-	 * @var \Gedmo\Translatable\TranslatableListener
-	 */
-	protected $translatableListener;
-
-	/**
-	 * @return array
-	 */
-	public function getTranslations() {
-		if (count($this->firstLevelTranslationsCache) > 0) {
-			return $this->firstLevelTranslationsCache;
-		}
-
-		/* @var $repository \Gedmo\Translatable\Entity\Repository\TranslationRepository */
-		$repository = $this->entityManager->getRepository('Gedmo\\Translatable\\Entity\\Translation');
-		$translations = $repository->findTranslations($this);
-
-		if (property_exists($this, 'translationAssociationMapping')) {
-			foreach ($translations as $language => $tmp) {
-				foreach ($this->translationAssociationMapping as $internalKey => $key) {
-					$possibleMethodName = ucfirst($key) . 'onLoad';
-					if (method_exists($this, $possibleMethodName)) {
-						if (isset($translations[$language][$internalKey])) {
-							$translations[$language][$key] = $this->$possibleMethodName($translations[$language][$internalKey]);
-						}
-						unset($translations[$language][$internalKey]);
-					}
-				}
-			}
-		}
-		$this->firstLevelTranslationsCache = $translations;
-
-		return $this->firstLevelTranslationsCache;
-	}
-
-	/**
-	 * Return the translations in the format of
-	 * 'name' => [
-	 *   'de' => 'Name auf Deutsch',
-	 *   'en' => 'Name in english',
-	 * ],
-	 * 'abstract' => [
-	 *   'de' => 'Der Abstract,
-	 *   'en' => 'The abstract'
-	 * ]
-	 * @return array
-	 */
-	public function getTranslationsByProperties(): array
-	{
-		$translations = [];
-		foreach ($this->getTranslations() as $language => $values) {
-			foreach ($values as $propertyName => $value) {
-				$translations[$propertyName][$language] = $value;
-			}
-		}
-		return $translations;
-	}
-
-	/**
-	 * Return the translations of a property
-	 *
-	 * @param $propertyName
-	 * @return array
-	 */
-	public function getTranslationsOfProperty($propertyName): array
-	{
-		$translations = array();
-		foreach ($this->getTranslations() as $key => $values) {
-			if (array_key_exists($propertyName, $values)) {
-				$translations[$key] = $values[$propertyName];
-			}
-		}
-		return $translations;
-	}
-
-	/**
-	 * Return the property in a specific locale
-	 *
-	 * @param string $propertyName
-	 * @param string $locale
-	 * @return null|string
-	 */
-	public function getPropertyInLocale(string $propertyName, string $locale): ?string
-	{
-		$propertyTranslations = $this->getTranslationsOfProperty($propertyName);
-		return $propertyTranslations[$locale] ?? null;
-	}
-
-	/**
-	 * Reload this object in $locale
-	 *ja
-	 * @param string $locale
-	 */
-	public function reloadInLocale($locale) {
-		$this->locale = $locale;
-		$this->entityManager->refresh($this);
-	}
+trait TranslatableTrait
+{
+    /**
+     * @\Neos\Flow\Annotations\Inject
+     * @var \Sandstorm\GedmoTranslatableConnector\TranslatableManagement\TranslatableManagerInterface
+     */
+    protected $translatableManager;
 
     /**
-     * @param string $locale
+     * Locale of this entity to override the translation listener`s locale.
+     *
+     * @\Neos\Flow\Annotations\Transient
+     * @\Gedmo\Mapping\Annotation\Locale
+     * @var string|null
      */
-    public function setLocale(string $locale)
+    protected ?string $locale = null;
+
+    /**
+     * The translations of this entity if loaded or set for update.
+     *
+     * @\Neos\Flow\Annotations\Transient
+     * @var array
+     * @phpstan-var array<string, array<string, string>>
+     */
+    protected array $translations = [];
+
+    /**
+     * Flag to indicate if the translations are loaded.
+     *
+     * @\Neos\Flow\Annotations\Transient
+     * @var bool
+     */
+    private bool $translationsLoaded = false;
+
+    /**
+     * Fetch the translations properties or simply return them if previously loaded.
+     *
+     * @return array
+     * @phpstan-return array<string, array<string, string>>
+     */
+    public function getTranslations(): array
+    {
+        if ($this->translationsLoaded) {
+            return $this->translations;
+        }
+
+        $translations = $this->translatableManager->getTranslations($this);
+
+        if (property_exists($this, 'translationAssociationMapping')) {
+            foreach ($translations as $language => $_) {
+                foreach ($this->translationAssociationMapping as $internalKey => $key) {
+                    $possibleMethodName = ucfirst($key) . 'onLoad';
+                    if (method_exists($this, $possibleMethodName)) {
+                        if (isset($translations[$language][$internalKey])) {
+                            $translations[$language][$key] = $this->$possibleMethodName(
+                                $translations[$language][$internalKey]
+                            );
+                        }
+                        unset($translations[$language][$internalKey]);
+                    }
+                }
+            }
+        }
+        $this->translations = $translations;
+        $this->translationsLoaded = true;
+
+        return $this->translations;
+    }
+
+    /**
+     * @deprecated use Utility::translationsByProperties()
+     */
+    public function getTranslationsByProperties(): array
+    {
+        return Utility::translationsByProperties($this);
+    }
+
+    /**
+     * @deprecated use Utility::propertyTranslations()
+     */
+    public function getTranslationsOfProperty($propertyName): array
+    {
+        return Utility::propertyTranslations($this, $propertyName);
+    }
+
+    /**
+     * @deprecated use Utility::propertyTranslationInLocale()
+     */
+    public function getPropertyInLocale(string $propertyName, string $locale): ?string
+    {
+        return Utility::propertyTranslationInLocale($this, $propertyName, $locale);
+    }
+
+    public function reloadInLocale(string $locale): void
+    {
+        $this->translatableManager->reloadInLocale($this, $locale);
+    }
+
+    /**
+     * @deprecated use setTranslatableLocale
+     */
+    public function setLocale(string $locale): void
     {
         $this->locale = $locale;
     }
 
-	/**
-	 * @param array $translations
-	 */
-	public function setTranslations(array $translations) {
-		if (property_exists($this, 'translationAssociationMapping')) {
-			foreach ($translations as $language => $tmp) {
-				foreach ($this->translationAssociationMapping as $internalKey => $key) {
-					$possibleMethodName = ucfirst($key) . 'onSave';
-					if (method_exists($this, $possibleMethodName)) {
-						if (isset($translations[$language][$key])) {
-							$translations[$language][$internalKey] = $this->$possibleMethodName($translations[$language][$key]);
-						}
-						unset($translations[$language][$key]);
-					}
-				}
-			}
-		}
-
-		/* @var $repository \Gedmo\Translatable\Entity\Repository\TranslationRepository */
-		$repository = $this->entityManager->getRepository('Gedmo\\Translatable\\Entity\\Translation');
-
-		foreach ($translations as $language => $properties) {
-            $meta = $this->entityManager->getClassMetadata(get_class($this));
-            // $locale class property overwrites the translatable listener (for some reasons, this is not always the same)
-			$locale = $this->locale ?? $this->translatableListener->getTranslatableLocale($this, $meta, $this->entityManager);
-            foreach ($properties as $propertyName => $translatedValue) {
-				if ($language === $locale) {
-					ObjectAccess::setProperty($this, $propertyName, $translatedValue);
-				}
-				/* Do not store empty translations since gedmo extension's behaviour has changed in
-				https://github.com/Atlantic18/DoctrineExtensions/commit/6cc9fb3864a2562806d8a66276196825e3181c49 */
-				if ($translatedValue) {
-					if ($language !== $locale) {
-						/* Do not translate the default language by the repository. The repository->translate() does the
-						same, but also persists the object ($this). However, persisting the object should not be handled
-						withing this setter. */
-						$repository->translate($this, $propertyName, $language, $translatedValue);
-					}
-				} else {
-					$this->removeTranslation($repository, $language, $propertyName);
-				}
-			}
-		}
-
-		// Keep the cache up to date. This also supports getTranslations() calls without persisting the object.
-        $this->firstLevelTranslationsCache = array_replace_recursive($this->firstLevelTranslationsCache, $translations);
-	}
+    public function setTranslatableLocale(string $locale): void
+    {
+        $this->locale = $locale;
+    }
 
     /**
-     * @param $repository
-     * @param $language
-     * @param $propertyName
+     * Set the translations property by recursively replacing exising entries.
+     *
+     * With enabled "instantTranslation" setting (default), this calls the translation repository's translate-method
+     * which already persist this entity itself!
+     *
+     * @param array<string, array<string, string>> $translations
      */
-    private function removeTranslation($repository, $language, $propertyName)
+    public function setTranslations(array $translations): void
     {
-        $meta = $this->entityManager->getClassMetadata(get_class($this));
-        $foreignKey = $meta->getReflectionProperty($meta->getSingleIdentifierFieldName())->getValue($this);
-        $trans = $repository->findOneBy([
-            'locale' => $language,
-            'objectClass' => get_class($this),
-            'field' => $propertyName,
-            'foreignKey' => $foreignKey
-        ]);
-        if ($trans) {
-            $this->entityManager->remove($trans);
+        if (property_exists($this, 'translationAssociationMapping')) {
+            foreach ($translations as $language => $_) {
+                foreach ($this->translationAssociationMapping as $internalKey => $key) {
+                    $possibleMethodName = ucfirst($key) . 'onSave';
+                    if (method_exists($this, $possibleMethodName)) {
+                        if (isset($translations[$language][$key])) {
+                            $translations[$language][$internalKey] = $this->$possibleMethodName(
+                                $translations[$language][$key]
+                            );
+                        }
+                        unset($translations[$language][$key]);
+                    }
+                }
+            }
         }
+
+        $this->translationsLoaded = true;
+        $this->translations = array_replace_recursive($this->translations, $translations);
+        $this->translatableManager->translate($this);
     }
 }
