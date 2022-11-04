@@ -1,14 +1,12 @@
 # Flow Framework Connector to Gedmo Translatable
 
-by Sebastian Kurfürst, sandstorm|media. Thanks to WebEssentials for sponsoring this work.
+by Sebastian Kurfürst, sandstorm|media. Thanks to Web Essentials for sponsoring this work initially. 
+Currently maintained by [@swisscomeventandmedia](https://github.com/swisscomeventandmedia)
 
-Using Gedmo.Translatable in Flow Framework proved a little harder than originally anticipated -- that's why I created
-a small package which wraps up the necessary steps.
-
-Has been tested on recent Flow Framework master.
+Using [Gedmo.Translatable](https://github.com/Atlantic18/DoctrineExtensions/blob/master/doc/translatable.md) in the Neos Flow framework proved a little harder than originally anticipated. This small package wraps up the necessary steps.
 
 
-## Usage
+## Getting started
 
 Just include this package, and then use Gedmo Translatable as explained in their documentation (e.g. using
 the @Gedmo\Translatable annotation): https://github.com/Atlantic18/DoctrineExtensions/blob/master/doc/translatable.md
@@ -19,26 +17,36 @@ Furthermore, make sure to create a *doctrine migration* which creates the ext_tr
 
 **Check out the example package at https://github.com/sandstorm/GedmoTest**.
 
+This connector supports all the advanced options provided by Gedmo Translatable.
+
 ### Model Annotations
 
 Just annotate your model properties which shall be localized with `Gedmo\Mapping\Annotation\Translatable`.
 
+```
+    /**
+     * @var string
+     * @Gedmo\Translatable
+     */
+    protected $title;
+```
+
 ### Translating a model (low-level)
 
 ```
-	/**
-	 * Doctrine's Entity Manager. Note that "ObjectManager" is the name of the related interface.
-	 *
-	 * @Flow\Inject
-	 * @var ObjectManager
-	 */
-	protected $entityManager;
+    /**
+     * Doctrine's Entity Manager. Note that "ObjectManager" is the name of the related interface.
+     *
+     * @Flow\Inject
+     * @var ObjectManager
+     */
+    protected $entityManager;
 
-	public function updateAction(Event $event) {
-		/* @var $repository TranslationRepository */
-		$repository = $this->entityManager->getRepository('Gedmo\\Translatable\\Entity\\Translation');
-		$repository->translate($event, 'name', 'de', 'Deutscher Titel');
-	}
+    public function updateAction(Event $event) {
+        /* @var $repository TranslationRepository */
+        $repository = $this->entityManager->getRepository('Gedmo\\Translatable\\Entity\\Translation');
+        $repository->translate($event, 'name', 'de', 'Deutscher Titel');
+    }
 ```
 
 ### Set current language
@@ -46,15 +54,17 @@ Just annotate your model properties which shall be localized with `Gedmo\Mapping
 In order to set the current language for *viewing*, inject the `Gedmo\Translatable\TranslatableListener` class and set
 the current language on it: `$translatableListener->setTranslatableLocale('de');`.
 
+## Translation management
+
 ### Editing multiple languages at the same time
 
-* Mix-in the Trait `Sandstorm\GedmoTranslatableConnector\TranslatableTrait` into your model, e.g. by doing:
+* Mix-in the Trait `Sandstorm\GedmoTranslatableConnector\TranslatableTrait` and implement `\Sandstorm\GedmoTranslatableConnector\Translatable` into your model, e.g. by doing:
 
 ```
 /**
  * @Flow\Entity
  */
-class MyModel {
+class MyModel implements \Sandstorm\GedmoTranslatableConnector\Translatable {
   use \Sandstorm\GedmoTranslatableConnector\TranslatableTrait;
   
   // make sure some properties have Gedmo\Translatable annotations
@@ -73,9 +83,14 @@ Name (de): <f:form.textfield property="translations.de.name" /><br />
 Name (en): <f:form.textfield property="translations.en.name" /><br />
 ```
 
+### Persist edited translations
+
+With the by default enabled `instantTranslation` setting, the translations are updated and persisted through the `Gedmo\Translatable\Entity\Repository\TranslationRepository` immediately when calling the `setTranslation` method.
+Often, this might not be ideal because it persists the entity right away. Disable the setting and call the `flush()` method of the `TranslatableManager` to persist the changes according to your needs.
+
 ### Fetching an object in another locale
 
-If you have loaded an object in a specific locale, but lateron need to change the object to be in another locale,
+If you have loaded an object in a specific locale, but later on need to change the object to be in another locale,
 the method `reloadInLocale($locale)` (which is defined inside the trait `Sandstorm\GedmoTranslatableConnector\TranslatableTrait`)
 can be called:
 
@@ -86,10 +101,7 @@ $myModel->reloadInLocale('de');
 $myModel->getName(); // will return *german*
 ```
 
-**NOTE**: This has only been tested as long as these objects are not updated.
-
-
-## Translating Associations
+## Translating associations
 
 **Warning: this feature is not yet 100% stable; please test it and give feedback!**
 
@@ -116,89 +128,89 @@ See the full example below:
 
 ```
 class Event {
-	use TranslatableTrait;
-	
-	/**
-	 * @var array
-	 * @Flow\Transient
-	 */
-	protected $translationAssociationMapping = array(
-		'assetIdentifier' => 'asset'
-	);
-	
-	/**
-	 * @Gedmo\Translatable
-	 * @var string
-	 */
-	protected $assetIdentifier;
+    use TranslatableTrait;
+    
+    /**
+     * @var array
+     * @Flow\Transient
+     */
+    protected $translationAssociationMapping = array(
+        'assetIdentifier' => 'asset'
+    );
+    
+    /**
+     * @Gedmo\Translatable
+     * @var string
+     */
+    protected $assetIdentifier;
 
-	/**
-	 * @Flow\Inject
-	 * @var AssetRepository
-	 */
-	protected $assetRepository;
+    /**
+     * @Flow\Inject
+     * @var AssetRepository
+     */
+    protected $assetRepository;
 
-	/**
-	 * @Flow\Inject
-	 * @var PersistenceManagerInterface
-	 */
-	protected $persistenceManager;
+    /**
+     * @Flow\Inject
+     * @var PersistenceManagerInterface
+     */
+    protected $persistenceManager;
 
-	/**
-	 * @Flow\Inject
-	 * @var PropertyMapper
-	 */
-	protected $propertyMapper;
+    /**
+     * @Flow\Inject
+     * @var PropertyMapper
+     */
+    protected $propertyMapper;
 
 
-	/**
-	 * @return \Neos\Media\Domain\Model\Asset
-	 */
-	public function getAsset() {
-		return $this->assetOnLoad($this->assetIdentifier);
-	}
+    /**
+     * @return \Neos\Media\Domain\Model\Asset
+     */
+    public function getAsset() {
+        return $this->assetOnLoad($this->assetIdentifier);
+    }
 
-	/**
-	 * !!! This accepts the raw array as the user uploaded it; as we need to trigger the property mapper inside
-	 *     assetOnSave manually.
-	 *
-	 * @param array $asset
-	 */
-	public function setAsset($asset) {
-		$this->assetIdentifier = $this->assetOnSave($asset);
-	}
+    /**
+     * !!! This accepts the raw array as the user uploaded it; as we need to trigger the property mapper inside
+     *     assetOnSave manually.
+     *
+     * @param array $asset
+     */
+    public function setAsset($asset) {
+        $this->assetIdentifier = $this->assetOnSave($asset);
+    }
 
-	/**
-	 * This method is called in two places:
-	 * - inside setAsset()
-	 * - automatically by the TranslatableTrait
-	 * 
-	 * @param array $asset
-	 */
-	public function assetOnSave($asset) {
-		$asset = $this->propertyMapper->convert($asset, 'Neos\Media\Domain\Model\AssetInterface');
-		if ($asset === NULL) {
-			$this->assetRepository->remove($asset);
-			return NULL;
-		} elseif ($this->persistenceManager->isNewObject($asset)) {
-			$this->assetRepository->add($asset);
-			return $this->persistenceManager->getIdentifierByObject($asset);
-		} else {
-			$this->assetRepository->update($asset);
-			return $this->persistenceManager->getIdentifierByObject($asset);
-		}
-	}
+    /**
+     * This method is called in two places:
+     * - inside setAsset()
+     * - automatically by the TranslatableTrait
+     * 
+     * @param array $asset
+     */
+    public function assetOnSave($asset) {
+        $asset = $this->propertyMapper->convert($asset, 'Neos\Media\Domain\Model\AssetInterface');
+        if ($asset === NULL) {
+            $this->assetRepository->remove($asset);
+            return NULL;
+        } elseif ($this->persistenceManager->isNewObject($asset)) {
+            $this->assetRepository->add($asset);
+            return $this->persistenceManager->getIdentifierByObject($asset);
+        } else {
+            $this->assetRepository->update($asset);
+            return $this->persistenceManager->getIdentifierByObject($asset);
+        }
+    }
 
-	/**
-	 * This method is called in two places:
-	 * - inside getAsset()
-	 * - automatically by the TranslatableTrait
-	 * 
-	 * @param array $asset
-	 */
-	public function assetOnLoad($assetIdentifier) {
-		return $this->assetRepository->findByIdentifier($assetIdentifier);
-	}
+    /**
+     * This method is called in two places:
+     * - inside getAsset()
+     * - automatically by the TranslatableTrait
+     * 
+     * @param array $asset
+     */
+    public function assetOnLoad($assetIdentifier) {
+        return $this->assetRepository->findByIdentifier($assetIdentifier);
+    }
 }
 ```   
 
@@ -216,7 +228,7 @@ class Event {
 * Package.php: Make the entities of Gedmo Translatable known to Doctrine and in Reflection. This was quite tricky to
   archive, see the inline docs in the class how this was done.
 
+## Further recommendation
 
-## TODO list
-
-* check Flow Framework 2.2
+* Use [ORM query hints](https://github.com/doctrine-extensions/DoctrineExtensions/blob/main/doc/translatable.md#using-orm-query-hint) when working with Gedmo Translatable to speed up queries.
+* Use [translation entities](https://github.com/doctrine-extensions/DoctrineExtensions/blob/main/doc/translatable.md#translation-entity) if you have large datasets with many translations.
