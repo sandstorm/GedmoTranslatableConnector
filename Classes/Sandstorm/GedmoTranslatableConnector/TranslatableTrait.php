@@ -156,7 +156,8 @@ trait TranslatableTrait
      * With enabled "instantTranslation" setting (default), this calls the translation repository's translate-method
      * which already persist this entity itself!
      *
-     * @param array<string, array<string, string>> $translations
+     * @param array $translations
+     * @phpstan-param array<string, array<string, string>> $translations
      */
     public function setTranslations(array $translations): void
     {
