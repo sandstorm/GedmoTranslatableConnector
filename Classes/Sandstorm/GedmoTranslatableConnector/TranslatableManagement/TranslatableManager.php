@@ -119,14 +119,14 @@ class TranslatableManager implements TranslatableManagerInterface
         $this->removeChangedEntity($entity);
     }
 
-    protected function addChangedEntity(Translatable $entity): void
+    public function addChangedEntity(Translatable $entity): void
     {
         if (!in_array($entity, $this->changedEntities, true)) {
             $this->changedEntities[] = $entity;
         }
     }
 
-    protected function removeChangedEntity(Translatable $entity): void
+    public function removeChangedEntity(Translatable $entity): void
     {
         $key = array_search($entity, $this->changedEntities, true);
         if ($key !== false) {
