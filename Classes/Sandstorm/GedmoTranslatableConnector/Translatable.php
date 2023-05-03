@@ -15,10 +15,18 @@ namespace Sandstorm\GedmoTranslatableConnector;
 interface Translatable extends \Gedmo\Translatable\Translatable
 {
     /**
-     * @return  array
-     * @phpstan-return  array<string, array<string, string>>
+     * @return array
+     * @phpstan-return array<string, array<string, string>>
      */
     public function getTranslations(): array;
 
+    public function reloadInLocale(string $locale): void;
+
     public function setTranslatableLocale(string $locale): void;
+
+    /**
+     * @param array $translations
+     * @phpstan-param array<string, array<string, string>> $translations
+     */
+    public function setTranslations(array $translations): void;
 }
