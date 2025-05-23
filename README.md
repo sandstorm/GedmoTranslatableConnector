@@ -1,7 +1,7 @@
 # Flow Framework Connector to Gedmo Translatable
 
 by Sebastian Kurfürst, sandstorm|media. Thanks to Web Essentials for sponsoring this work initially. 
-Currently maintained by [@swisscomeventandmedia](https://github.com/swisscomeventandmedia)
+Currently maintained by [@onivaevents](https://github.com/onivaevents)
 
 Using [Gedmo.Translatable](https://github.com/Atlantic18/DoctrineExtensions/blob/master/doc/translatable.md) in the Neos Flow framework proved a little harder than originally anticipated. This small package wraps up the necessary steps.
 
